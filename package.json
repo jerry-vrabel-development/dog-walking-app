@@ -2,8 +2,8 @@
   "name": "dog-walking-app",
   "private": true,
   "workspaces": [
-    "frontend/*",
-    "backend/*",
+    "frontend",
+    "backend",
     "packages/*"
   ],
   "scripts": {
@@ -14,7 +14,6 @@
     "install:all": "npm install --workspaces"
   },
   "devDependencies": {
-    "concurrently": "^7.6.0",
-    "@dog-walking-app/shared": "workspace:*"
+    "concurrently": "^7.6.0"
   }
 }
