@@ -4,16 +4,19 @@
   "workspaces": [
     "frontend",
     "backend",
-    "packages/*"
+    "packages/shared"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
-    "build": "npm run build --workspaces",
+    "build": "npm run build -w @dog-walking-app/shared && npm run build -w frontend && npm run build -w backend",
     "install:all": "npm install --workspaces"
   },
   "devDependencies": {
     "concurrently": "^7.6.0"
+  },
+  "dependencies": {
+    "@dog-walking-app/shared": "^1.0.0"
   }
 }
