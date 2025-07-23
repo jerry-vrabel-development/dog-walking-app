@@ -1,6 +1,6 @@
 // apps/frontend/src/components/UserList.tsx
 import React, { useEffect, useState } from 'react';
-import { userApi, User } from '../services/api';
+import { userApi, type User } from '../services/api';
 
 export const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
