@@ -7,7 +7,7 @@ export interface User {
   _id?: string;
   name: string;
   email: string;
-  role: 'owner' | 'walker' | 'admin';
+  role?: 'owner' | 'walker' | 'admin';
   phone?: string;
   address?: string;
   createdAt?: Date;
