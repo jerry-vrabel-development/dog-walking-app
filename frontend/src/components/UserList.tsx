@@ -5,7 +5,11 @@ import { userApi, type User } from '../services/api';
 export const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newUser, setNewUser] = useState({ name: '', email: '' });
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    role: 'owner' as 'owner' | 'walker' | 'admin'
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -14,7 +18,7 @@ export const UserList: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const response = await userApi.getUsers();
-      setUsers(response.data);
+      setUsers(response.data.data);
     } catch (error) {
       console.error('Failed to fetch users:', error);
     } finally {
@@ -26,7 +30,11 @@ export const UserList: React.FC = () => {
     e.preventDefault();
     try {
       await userApi.createUser(newUser);
-      setNewUser({ name: '', email: '' });
+      setNewUser({
+        name: '',
+        email: '',
+        role: 'owner' as 'owner' | 'walker' | 'admin'
+      });
       fetchUsers();
     } catch (error) {
       console.error('Failed to create user:', error);
