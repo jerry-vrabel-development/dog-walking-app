@@ -1,16 +1,37 @@
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  role: 'owner' | 'walker';
+  phone?: string;
+  address?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
 export interface CreateUserRequest {
   name: string;
   email: string;
 }
 
 export interface User {
-  _id?: string;
+  _id: string;
   name: string;
   email: string;
-  role?: 'owner' | 'walker' | 'admin';
+  password?: string;
+  role: 'owner' | 'walker' | 'admin';
   phone?: string;
   address?: string;
-  createdAt?: Date;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface Walker extends User {
