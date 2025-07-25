@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { User } from '../models/User';
 import { authenticateToken } from '../middleware/auth';
+import { requireAdmin, requireAdminOrSelf } from '../middleware/admin';
 import { ApiResponse } from '@dog-walking-app/shared';
 import bcrypt from 'bcryptjs';
 
@@ -9,8 +10,8 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all users (admin functionality or for displaying user lists)
-router.get('/', async (req: Request, res: Response) => {
+// Get all users (admin only)
+router.get('/', requireAdmin, async (req: Request, res: Response) => {
   try {
     // Only return basic user info, exclude password
     const users = await User.find({}, '-password').sort({ createdAt: -1 });
@@ -29,8 +30,8 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get a specific user by ID
-router.get('/:id', async (req: Request, res: Response) => {
+// Get a specific user by ID (admin or the user themselves)
+router.get('/:id', requireAdminOrSelf, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id, '-password');
@@ -56,8 +57,8 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Create a new user
-router.post('/', async (req: Request, res: Response) => {
+// Create a new user (admin only)
+router.post('/', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { name, email, role, phone, address } = req.body;
     
@@ -107,20 +108,35 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
-// Update a user
-router.put('/:id', async (req: Request, res: Response) => {
+// Update a user (admin or the user themselves)
+router.put('/:id', requireAdminOrSelf, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { password, ...updateData } = req.body;
+    const { password, role, ...updateData } = req.body;
+    
+    // Only admins can change roles
+    if (role && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only admins can change user roles'
+      });
+    }
+    
+    const finalUpdateData = { ...updateData };
+    
+    // If role is being updated and user is admin, include it
+    if (role && req.user.role === 'admin') {
+      finalUpdateData.role = role;
+    }
     
     // If password is being updated, hash it
     if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+      finalUpdateData.password = await bcrypt.hash(password, 10);
     }
     
     const user = await User.findByIdAndUpdate(
       id,
-      { ...updateData, updatedAt: new Date() },
+      { ...finalUpdateData, updatedAt: new Date() },
       { new: true, runValidators: true }
     ).select('-password');
     
@@ -145,12 +161,12 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Delete a user
-router.delete('/:id', async (req: Request, res: Response) => {
+// Delete a user (admin only)
+router.delete('/:id', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
-    // Don't allow users to delete themselves
+    // Don't allow admins to delete themselves
     if (id === req.user._id.toString()) {
       return res.status(400).json({
         success: false,
@@ -177,6 +193,28 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete user'
+    });
+  }
+});
+
+// Get all walkers (public endpoint for owners to browse)
+router.get('/walkers/available', async (req: Request, res: Response) => {
+  try {
+    const walkers = await User.find(
+      { role: 'walker' },
+      '-password'
+    ).sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      data: walkers,
+      message: 'Available walkers retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Get walkers error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve walkers'
     });
   }
 });
