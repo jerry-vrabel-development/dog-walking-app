@@ -61,6 +61,8 @@ export const userApi = {
   getUsers: () => api.get<ApiResponse<User[]>>('/users'),
   createUser: (user: Omit<User, '_id' | 'createdAt'>) => 
     api.post<ApiResponse<User>>('/users', user),
+  deleteUser: (id: string) =>
+    api.delete<ApiResponse<null>>(`/users/${id}`),
 };
 
 export const dogApi = {
