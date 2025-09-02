@@ -32,10 +32,54 @@ export const Dashboard: React.FC = () => {
         );
       
       case 'admin':
+        // Handle different admin views
         if (activeAdminView === 'users') {
           return <UserManagement onBack={() => setActiveAdminView('dashboard')} />;
         }
         
+        if (activeAdminView === 'dogs') {
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setActiveAdminView('dashboard')}
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+              <DogManagement isAdminView={true} />
+            </div>
+          );
+        }
+
+        if (activeAdminView === 'stats') {
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">System Statistics</h2>
+                <button
+                  onClick={() => setActiveAdminView('dashboard')}
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Statistics Dashboard
+                  </h3>
+                  <p className="text-gray-600">
+                    System statistics and analytics coming soon...
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        // Default admin dashboard view
         return (
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
