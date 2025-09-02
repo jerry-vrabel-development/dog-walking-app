@@ -8,10 +8,22 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all dogs for the authenticated user
+// Get all dogs for the authenticated user (or all dogs if admin)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const dogs = await Dog.find({ ownerId: req.user._id, isActive: true });
+    let query: any = { isActive: true };
+    
+    // If user is admin and requesting all dogs via query parameter
+    if (req.user.role === 'admin' && req.query.all === 'true') {
+      // Return all dogs (keep only isActive filter)
+      query = { isActive: true };
+    } else {
+      // Regular users only see their own dogs
+      query = { ownerId: req.user._id, isActive: true };
+    }
+    
+    const dogs = await Dog.find(query).populate('ownerId', 'name email'); // Optionally populate owner info for admin view
+    
     res.json({
       success: true,
       data: dogs,
@@ -56,8 +68,17 @@ router.post('/', async (req: Request<{}, ApiResponse<any>, CreateDogRequest>, re
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    // Build query based on user role
+    let findQuery: any = { _id: id };
+    
+    // If not admin, restrict to user's own dogs
+    if (req.user.role !== 'admin') {
+      findQuery.ownerId = req.user._id;
+    }
+    
     const dog = await Dog.findOneAndUpdate(
-      { _id: id, ownerId: req.user._id },
+      findQuery,
       req.body,
       { new: true, runValidators: true }
     );
@@ -87,8 +108,17 @@ router.put('/:id', async (req: Request, res: Response) => {
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    // Build query based on user role
+    let findQuery: any = { _id: id };
+    
+    // If not admin, restrict to user's own dogs
+    if (req.user.role !== 'admin') {
+      findQuery.ownerId = req.user._id;
+    }
+
     const dog = await Dog.findOneAndUpdate(
-      { _id: id, ownerId: req.user._id },
+      findQuery,
       { isActive: false },
       { new: true }
     );
@@ -110,6 +140,51 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete dog'
+    });
+  }
+});
+
+// Get all dogs for the authenticated user (or all dogs if admin)
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    console.log('=== DOG ROUTE DEBUG ===');
+    console.log('User:', req.user);
+    console.log('User role:', req.user.role);
+    console.log('Query params:', req.query);
+    console.log('Query all:', req.query.all);
+    console.log('Is admin?', req.user.role === 'admin');
+    console.log('All param is true?', req.query.all === 'true');
+    console.log('Both conditions?', req.user.role === 'admin' && req.query.all === 'true');
+    
+    let query: any = { isActive: true };
+    
+    // If user is admin and requesting all dogs via query parameter
+    if (req.user.role === 'admin' && req.query.all === 'true') {
+      console.log('✅ ADMIN VIEW: Fetching ALL dogs');
+      query = { isActive: true };
+    } else {
+      console.log('👤 USER VIEW: Fetching user\'s dogs only');
+      query = { ownerId: req.user._id, isActive: true };
+    }
+    
+    console.log('Final query:', query);
+    
+    const dogs = await Dog.find(query);
+    
+    console.log('Found dogs count:', dogs.length);
+    console.log('Dogs:', dogs.map(d => ({ name: d.name, ownerId: d.ownerId })));
+    console.log('=== END DEBUG ===');
+    
+    res.json({
+      success: true,
+      data: dogs,
+      message: 'Dogs retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Get dogs error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve dogs'
     });
   }
 });

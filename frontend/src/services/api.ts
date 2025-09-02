@@ -61,12 +61,15 @@ export const userApi = {
   getUsers: () => api.get<ApiResponse<User[]>>('/users'),
   createUser: (user: Omit<User, '_id' | 'createdAt'>) => 
     api.post<ApiResponse<User>>('/users', user),
+  updateUser: (id: string, user: Partial<Omit<User, '_id' | 'createdAt'>>) =>
+    api.put<ApiResponse<User>>(`/users/${id}`, user),
   deleteUser: (id: string) =>
     api.delete<ApiResponse<null>>(`/users/${id}`),
 };
 
 export const dogApi = {
-  getDogs: () => api.get<ApiResponse<Dog[]>>('/dogs'),
+  getDogs: (includeAll = false) => 
+    api.get<ApiResponse<Dog[]>>(`/dogs${includeAll ? '?all=true' : ''}`),
   createDog: (dogData: CreateDogRequest) => 
     api.post<ApiResponse<Dog>>('/dogs', dogData),
   updateDog: (id: string, dogData: Partial<CreateDogRequest>) =>
